@@ -36,41 +36,38 @@ async def verify_webhook(request: Request):
 # ---------------- BACKGROUND WORKER ----------------
 def process_message(sender_id: str, message_text: str, is_media=False):
 
-    db = SessionLocal()
-
     try:
+        db = SessionLocal()
 
-        # -------- MEDIA FLOW --------
+        # 1. MEDIA FLOW (FAST STATIC RESPONSE)
         if is_media:
 
-            reply = """
-Thank you for contacting Hytoma Automation LLP 😊
-
-Please share your details so we can assist you better:
-
-• Name
-• Mobile Number
-• Email (optional)
-• Location
-• Requirement
-"""
+            reply = (
+                "Thank you for contacting Hytoma Automation LLP 😊\n\n"
+                "Please share:\n"
+                "- Name\n"
+                "- Mobile\n"
+                "- Location\n"
+                "- Requirement"
+            )
 
         else:
 
+            # 2. AI CALL (ONLY THIS IS SLOW PART)
             reply = ai_chat(
                 db=db,
                 customer_id=sender_id,
                 message=message_text
             )
 
-        send_instagram_message(
-            recipient_id=sender_id,
-            text=reply
-        )
+        # 3. SEND MESSAGE (NON BLOCKING SAFE CALL)
+        try:
+            send_instagram_message(sender_id, reply)
+        except Exception as e:
+            print("Send message failed:", e)
 
     finally:
         db.close()
-
 
 
 

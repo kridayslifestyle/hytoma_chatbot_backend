@@ -44,7 +44,7 @@ def send_instagram_message(recipient_id, text):
             headers=headers,
             params=params,
             json=payload,
-            timeout=30
+            timeout=5
         )
 
         print("\n========== SEND MESSAGE ==========")
