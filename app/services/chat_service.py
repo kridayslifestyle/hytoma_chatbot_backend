@@ -2,20 +2,21 @@ from sqlalchemy.orm import Session
 from app.models.conversation import Conversation
 
 
-def save_message(
-        db: Session,
-        customer_id: str,
-        role: str,
-        message: str):
+def save_message(db, customer_id, role, message):
 
-    conversation = Conversation(
-        customer_id=customer_id,
-        role=role,
-        message=message
-    )
+    try:
+        conversation = Conversation(
+            customer_id=customer_id,
+            role=role,
+            message=message
+        )
 
-    db.add(conversation)
-    db.commit()
+        db.add(conversation)
+        db.commit()
+
+    except Exception as e:
+        db.rollback()   # 🔥 CRITICAL
+        print("SAVE MESSAGE ERROR:", e)
 
 
 def get_history(

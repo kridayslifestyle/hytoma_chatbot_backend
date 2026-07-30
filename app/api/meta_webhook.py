@@ -65,6 +65,7 @@ def process_message(sender_id: str, message_text: str, is_media=False):
             send_instagram_message(sender_id, reply)
         except Exception as e:
             print("Send message failed:", e)
+            db.rollback()
 
     finally:
         db.close()
