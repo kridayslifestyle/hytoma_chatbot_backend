@@ -1,0 +1,58 @@
+[
+  {
+    "category": "Door Lock",
+    "items": [
+      {
+        "name": "Face Recognition Lock",
+        "price": 28000
+      },
+      {
+        "name": "Motorized Fingerprint Lock",
+        "price": 16000
+      },
+      {
+        "name": "Hand + Fingerprint Lock",
+        "price": 12000
+      },
+      {
+        "name": "Glass Door Lock",
+        "price": 14000
+      }
+    ]
+  },
+  {
+    "category": "Switch Board",
+    "items": [
+      { "name": "2 Module Switch Board", "price": 6000 },
+      { "name": "4 Module Switch Board", "price": 8000 },
+      { "name": "6 Module Switch Board", "price": 10000 },
+      { "name": "8 Module Switch Board", "price": 12000 }
+    ]
+  },
+  {
+    "category": "Video Door Bell",
+    "items": [
+      { "name": "With Screen", "price": 18000 },
+      { "name": "Without Screen", "price": 12000 }
+    ]
+  },
+  {
+    "category": "Curtain Automation",
+    "items": [
+      { "name": "8–12 ft Curtain Motor", "price": 16000 },
+      { "name": "13–20 ft Curtain Motor", "price": 22000 }
+    ]
+  },
+  {
+    "category": "Gate Automation",
+    "items": [
+      { "name": "Gate Motor (Starting)", "price": 60000 }
+    ]
+  },
+  {
+    "category": "Sensors",
+    "items": [
+      { "name": "Microwave Sensor", "price": 1200 }
+    ]
+  }
+]

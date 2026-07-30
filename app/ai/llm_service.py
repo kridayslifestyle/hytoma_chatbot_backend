@@ -3,17 +3,13 @@ from dotenv import load_dotenv
 import os
 
 from app.rag.retriever import retrieve_context
-from app.utils.constants import (
-    MAX_HISTORY,
-    SUMMARY_TRIGGER,
-    SYSTEM_PROMPT
-)
+from app.utils.constants import MAX_HISTORY, SUMMARY_TRIGGER, SYSTEM_PROMPT
+from app.rag.product_retriever import retrieve_products
 
 load_dotenv()
 
 client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY")
+    base_url="https://openrouter.ai/api/v1", api_key=os.getenv("OPENROUTER_API_KEY")
 )
 
 
@@ -21,7 +17,13 @@ def generate_reply(messages):
 
     question = messages[-1]["content"]
 
-    context = retrieve_context(question)
+    products = retrieve_products(question)
+
+    context = f"""
+    PRODUCT CATALOG (USE ONLY THIS):
+
+    {products}
+    """
 
     print("\nQuestion:")
     print(question)
@@ -30,11 +32,8 @@ def generate_reply(messages):
     print(context)
 
     response = client.chat.completions.create(
-
         model="deepseek/deepseek-chat-v3-0324",
-
         messages=[
-
             {
                 "role": "system",
                 "content": f"""
@@ -56,6 +55,13 @@ RULES (VERY IMPORTANT):
 - Do NOT use outside knowledge.
 - Do NOT explain reasoning.
 
+IMPORTANT:
+- These are official company prices
+- NEVER modify prices
+- NEVER generate new prices
+- If user asks for price, only use this catalog
+- Always mention: "For best price contact us"
+
 STYLE:
 
 - Human sales executive tone
@@ -64,11 +70,10 @@ STYLE:
 
 If answer is not in context, say:
 "Please contact Hytoma for more details."
-"""
+""",
             }
-
-        ] + messages
-
+        ]
+        + messages,
     )
 
     reply = response.choices[0].message.content
@@ -79,26 +84,20 @@ If answer is not in context, say:
 
     return reply
 
+
 def generate_summary(messages):
 
     conversation = ""
 
     for msg in messages:
 
-        conversation += (
-            f"{msg['role']}: "
-            f"{msg['content']}\n"
-        )
+        conversation += f"{msg['role']}: " f"{msg['content']}\n"
 
     response = client.chat.completions.create(
-
         model="deepseek/deepseek-chat-v3-0324",
-
         messages=[
-
             {
                 "role": "system",
-
                 "content": """
 You are a memory engine.
 
@@ -119,16 +118,10 @@ Rules:
 - Do not answer the customer.
 - Do not make recommendations.
 - Keep the summary under 100 words.
-"""
+""",
             },
-
-            {
-                "role": "user",
-                "content": conversation
-            }
-
-        ]
-
+            {"role": "user", "content": conversation},
+        ],
     )
 
     summary = response.choices[0].message.content

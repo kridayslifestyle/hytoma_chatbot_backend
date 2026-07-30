@@ -7,6 +7,10 @@ dimension = 384
 
 index = faiss.IndexFlatL2(dimension)
 
+PRICE_KEYWORDS = [
+    "price", "cost", "₹", "rs", "budget", "offer"
+]
+
 documents = []
 document_set = set()
 
@@ -30,6 +34,11 @@ def add_document(text):
     
 
 def search(query, k=5):
+
+    q = query.lower().strip()
+
+    if any(kword in q for kword in PRICE_KEYWORDS):
+        return []
 
     vector = get_embedding(query)
 
@@ -96,3 +105,19 @@ def load_index():
     except:
 
         print("No existing FAISS index.")
+
+
+def retrieve_context(query):
+
+    q = query.lower()
+
+    if any(k in q for k in PRICE_KEYWORDS):
+        return {
+            "type": "product",
+            "data": []
+        }
+
+    return {
+        "type": "rag",
+        "data": search(query)
+    }
