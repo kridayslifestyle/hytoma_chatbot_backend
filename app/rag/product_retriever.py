@@ -23,26 +23,25 @@ def retrieve_products(query: str):
 
     results = []
 
+    # ---------------- STRICT MATCH (CATEGORY + NAME) ----------------
     for category in products:
+        cat_name = category.get("category", "").lower()
+
         for item in category.get("items", []):
+            name = item.get("name", "").lower()
 
-            name = item["name"].lower()
-            category_name = category["category"].lower()
-
-            if (
-                any(word in name for word in q.split()) or
-                any(word in category_name for word in q.split())
-            ):
+            # 🔥 STRICT MATCHING (IMPORTANT FIX)
+            if cat_name in q or name in q:
                 results.append({
                     "category": category["category"],
                     "name": item["name"],
                     "price": item["price"]
                 })
 
-    # fallback → return full category if nothing matched
+    # ---------------- FALLBACK (CATEGORY ONLY) ----------------
     if not results:
         for category in products:
-            if any(word in category["category"].lower() for word in q.split()):
+            if category["category"].lower() in q:
                 for item in category["items"]:
                     results.append({
                         "category": category["category"],

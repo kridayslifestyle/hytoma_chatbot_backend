@@ -15,9 +15,7 @@ document_set = set()
 
 # ---------------- PRICE KEYWORDS ----------------
 PRICE_KEYWORDS = [
-    "price", "cost", "₹", "rs", "budget", "offer",
-    "gate", "lock", "curtain", "switch", "door",
-    "motor", "automation"
+    "price", "cost", "₹", "rs", "budget", "offer", "pricing"
 ]
 
 
@@ -42,10 +40,10 @@ def add_document(text):
 # ---------------- FAISS SEARCH ----------------
 def search(query, k=5):
 
-    q = query.lower().strip()
+    q = query.lower()
 
-    # 🚨 HARD BLOCK PRODUCT / PRICE QUERIES
-    if any(kword in q for kword in PRICE_KEYWORDS):
+    # 🚨 BLOCK PRODUCT QUERIES COMPLETELY
+    if any(word in q for word in PRICE_KEYWORDS):
         return []
 
     vector = get_embedding(query)
