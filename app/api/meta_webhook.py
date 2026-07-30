@@ -107,6 +107,10 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
 
             message = messaging.get("message", {})
 
+            if message.get("is_echo"):
+                print("Ignoring echo message.")
+                return {"status": "ok"}
+
             if message.get("attachments"):
 
                 print("MEDIA RECEIVED")

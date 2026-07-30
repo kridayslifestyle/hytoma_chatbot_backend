@@ -114,4 +114,4 @@ def ai_chat(db, customer_id, message):
     except Exception as e:
         print("AI CHAT ERROR:", e)
         db.rollback()
-        return "Sorry, something went wrong. Please try again."
+        return None
