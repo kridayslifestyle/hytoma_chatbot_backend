@@ -108,17 +108,18 @@ def load_products():
 # ---------------- MAIN ROUTER (IMPORTANT FIX) ----------------
 def retrieve_context(query):
 
-    q = query.lower().strip()
+    q = query.lower()
 
-    # ---------------- PRODUCT / PRICE ROUTE ----------------
-    if any(k in q for k in PRICE_KEYWORDS):
+    price_keywords = ["price", "cost", "₹", "budget", "offer", "pricing"]
 
+    # 🚨 FORCE PRODUCT MODE
+    if any(k in q for k in price_keywords):
         return {
             "type": "product",
-            "data": load_products()
+            "data": []
         }
 
-    # ---------------- RAG ROUTE ----------------
+    # ONLY RAG FOR NON-PRICE
     return {
         "type": "rag",
         "data": search(query)

@@ -26,63 +26,49 @@ def generate_reply(messages):
 
     question = messages[-1]["content"].strip()
 
-    # ---------------- PRODUCT FETCH ----------------
     products = retrieve_products(question)
 
-    # FORCE JSON SAFE FORMAT
-    context = json.dumps(products, indent=2)
+    # ✅ FIXED FORMAT (NO JSON)
+    def format_products(products):
+        if not products:
+            return ""
 
-    print("\n====================")
-    print("QUESTION:", question)
-    print("\nPRODUCT CONTEXT:")
-    print(context)
-    print("====================\n")
+        return "\n".join([
+            f"- {p['name']}: ₹{p['price']}"
+            for p in products
+        ])
 
-    # ---------------- STRICT SYSTEM PROMPT ----------------
+    context = format_products(products)
+
+    print("\nQUESTION:", question)
+    print("\nPRODUCT CONTEXT:\n", context)
+
     system_prompt = """
-You are Hytoma AI, a STRICT sales assistant for Hytoma Automation LLP.
+You are Hytoma AI Sales Assistant.
 
-🔥 CRITICAL RULES (NON-NEGOTIABLE):
+🚨 RULES:
+- NEVER mix products
+- NEVER create bundles
+- NEVER modify prices
+- ONLY use given product list
 
-1. NEVER create bundles or combinations
-2. NEVER mix multiple products into one offer
-3. NEVER modify prices
-4. NEVER assume budget or customer intent
-5. NEVER generate new products
-6. ONLY use the given product catalog
+📦 FORMAT:
+- Product Name: ₹Price
 
-📦 OUTPUT RULE:
-- Show ONLY matching products
-- Format:
-  Product Name: ₹Price
-- Use bullet points only (-)
-- No paragraphs
+IF NO PRODUCTS:
+Say: "Please contact Hytoma for best price & details."
 
-💰 PRICE RULE:
-- Use EXACT prices from catalog
-- If not found → say:
-  "Please contact Hytoma for best price & details."
-
-📌 IMPORTANT LINE (MANDATORY):
-Always end response with:
+Always end with:
 "For best price contact us"
-
-STYLE:
-- Short
-- Simple Instagram tone
-- Sales executive style
-- No explanations
 """
 
-    # ---------------- MESSAGE BUILD ----------------
     messages_payload = [
         {
             "role": "system",
-            "content": system_prompt + "\n\nPRODUCT CATALOG:\n" + context
+            "content": system_prompt + "\n\nPRODUCTS:\n" + context
         }
     ] + messages
 
-    # ---------------- LLM CALL ----------------
     response = client.chat.completions.create(
         model="deepseek/deepseek-chat-v3-0324",
         messages=messages_payload
@@ -90,7 +76,6 @@ STYLE:
 
     reply = response.choices[0].message.content
 
-    # ---------------- SAFETY CUT ----------------
     if len(reply) > 950:
         reply = reply[:950].rsplit(" ", 1)[0] + "..."
 
