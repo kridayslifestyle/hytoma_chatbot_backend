@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Local test scripts (IMPORTANT)
+test_*.py
+
+# Database / indexes
+*.db
+*.sqlite
+faiss_index.bin
+documents.pkl
+
+# IDE
+.vscode/
+.idea/
+
+test_customer.py
+test_db.py
+test_faiss.py
+test_get_profile.py
+test_instagram_sender.py
+test_pdf_rag.py
+test_profile_extractor.py
+test_profile.py
