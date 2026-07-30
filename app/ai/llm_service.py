@@ -71,3 +71,40 @@ STYLE:
         reply = reply[:950].rsplit(" ", 1)[0] + "..."
 
     return reply
+
+def generate_summary(messages):
+
+    conversation = ""
+
+    for msg in messages:
+        conversation += f"{msg['role']}: {msg['content']}\n"
+
+    response = client.chat.completions.create(
+        model="deepseek/deepseek-chat-v3-0324",
+        messages=[
+            {
+                "role": "system",
+                "content": """
+You are a memory engine.
+
+Create a concise summary.
+
+Rules:
+- Only factual info
+- Under 100 words
+- No recommendations
+"""
+            },
+            {
+                "role": "user",
+                "content": conversation
+            }
+        ]
+    )
+
+    summary = response.choices[0].message.content
+
+    if not summary:
+        return None
+
+    return summary.strip()
