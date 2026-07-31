@@ -1,6 +1,6 @@
 from app.ai.profile_extractor import extract_profile
 from app.services.profile_service import update_profile
-
+from app.rag.product_retriever import retrieve_products
 from app.services.chat_service import (
     save_message,
     get_history
@@ -19,7 +19,7 @@ from app.services.summary_service import (
 from app.utils.constants import SUMMARY_TRIGGER
 from app.utils.greetings import GREETINGS, get_greeting_reply
 from app.utils.small_talk import SMALL_TALK
-
+from app.utils.helpers import is_price_query
 
 def ai_chat(db, customer_id, message):
 
@@ -41,7 +41,7 @@ def ai_chat(db, customer_id, message):
                 save_message(db, customer_id, "assistant", value)
                 return value
 
-        # -------- FAST PATH: Profile Extraction --------
+        # -------- FAST PATH: PROFILE --------
         PROFILE_KEYWORDS = ["name", "budget", "phone", "location", "city", "contact"]
 
         if any(k in msg for k in PROFILE_KEYWORDS):
@@ -51,65 +51,24 @@ def ai_chat(db, customer_id, message):
             except Exception as e:
                 print("Profile extraction failed:", e)
 
-        # -------- GET HISTORY (ONLY ONCE) --------
-        history = get_history(db, customer_id, limit=6)
+        # 🔥🔥🔥 ADD THIS BLOCK (VERY IMPORTANT)
+        # -------- PRICE ROUTE (HIGHEST PRIORITY) --------
+        if is_price_query(message):
 
-        # -------- GET SUMMARY (SAFE) --------
-        summary_record = None
-        summary_text = ""
 
-        try:
-            summary_record = get_summary(db, customer_id)
-            if summary_record:
-                summary_text = summary_record.summary
-        except Exception as e:
-            print("Summary fetch failed:", e)
 
-        # -------- BUILD CONTEXT --------
-        messages = []
+            products = retrieve_products(message)
 
-        if summary_text:
-            messages.append({
-                "role": "system",
-                "content": f"Conversation Summary:\n{summary_text}"
-            })
+            if not products:
+                reply = "Please contact Hytoma for best price & details 😊"
+            else:
+                reply = "\n".join([
+                    f"- {p['name']}: ₹{p['price']}"
+                    for p in products
+                ]) + "\n\nFor best price contact us 😊"
 
-        for item in history:
-            messages.append({
-                "role": item.role,
-                "content": item.message[:200]
-            })
-
-        # -------- AI RESPONSE --------
-        reply = generate_reply(messages)
-
-        # -------- SAVE ASSISTANT RESPONSE --------
-        save_message(db, customer_id, "assistant", reply)
-
-        # -------- SUMMARY TRIGGER (NON-BLOCKING SAFE) --------
-        try:
-            total_messages = len(history)
-
-            if total_messages >= SUMMARY_TRIGGER:
-
-                print("⚠️ Summary triggered")
-
-                full_history = get_history(db, customer_id, limit=100)
-
-                summary_messages = [
-                    {"role": item.role, "content": item.message}
-                    for item in full_history
-                ]
-
-                summary = generate_summary(summary_messages)
-
-                if summary:
-                    save_summary(db, customer_id, summary)
-
-        except Exception as e:
-            print("Summary error:", e)
-
-        return reply
+            save_message(db, customer_id, "assistant", reply)
+            return reply
 
     except Exception as e:
         print("AI CHAT ERROR:", e)
