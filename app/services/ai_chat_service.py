@@ -19,7 +19,7 @@ from app.services.summary_service import (
 from app.utils.constants import SUMMARY_TRIGGER
 from app.utils.greetings import GREETINGS, get_greeting_reply
 from app.utils.small_talk import SMALL_TALK
-from app.utils.helpers import is_price_query
+from app.utils.helpers import is_price_query, is_product_query
 
 def ai_chat(db, customer_id, message):
 
@@ -51,7 +51,7 @@ def ai_chat(db, customer_id, message):
                 print("Profile error:", e)
 
         # ---------------- PRICE ROUTE ----------------
-        if is_price_query(msg):
+        if is_price_query(msg) or is_product_query(msg):
             
 
             products = retrieve_products(message)
