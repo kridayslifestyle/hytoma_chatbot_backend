@@ -1,88 +1,40 @@
 from openai import OpenAI
-from dotenv import load_dotenv
 import os
-import json
-
-from app.rag.product_retriever import retrieve_products
+from dotenv import load_dotenv
 
 load_dotenv()
 
+# ---------------- GROQ CLIENT ----------------
 client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY")
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("GROQ_API_KEY")
 )
 
-# ---------------- PRICE QUERY DETECTOR ----------------
-def is_price_query(text: str):
-    keywords = [
-        "price", "cost", "₹", "rs", "budget",
-        "offer", "rate", "how much", "pricing"
-    ]
-    return any(k in text.lower() for k in keywords)
-
-
-# ---------------- MAIN RESPONSE ----------------
+# ---------------- MAIN CHAT GENERATION ----------------
 def generate_reply(messages):
 
-    question = messages[-1]["content"].strip()
-
-    products = retrieve_products(question)
-
-    # ✅ FIXED FORMAT (NO JSON)
-    def format_products(products):
-        if not products:
-            return ""
-
-        return "\n".join([
-            f"- {p['name']}: ₹{p['price']}"
-            for p in products
-        ])
-
-    context = format_products(products)
-
-    print("\nQUESTION:", question)
-    print("\nPRODUCT CONTEXT:\n", context)
-
-    system_prompt = """
-You are Hytoma AI Sales Assistant.
-
-🚨 RULES:
-- NEVER mix products
-- NEVER create bundles
-- NEVER modify prices
-- ONLY use given product list
-
-📦 FORMAT:
-- Product Name: ₹Price
-
-IF NO PRODUCTS:
-Say: "Please contact Hytoma for best price & details."
-
-Always end with:
-"For best price contact us"
-"""
-
-    messages_payload = [
-        {
-            "role": "system",
-            "content": system_prompt + "\n\nPRODUCTS:\n" + context
-        }
-    ] + messages
-
+    # keep token usage low (VERY IMPORTANT)
     response = client.chat.completions.create(
-        model="deepseek/deepseek-chat-v3-0324",
-        messages=messages_payload
+        model="llama3-8b-8192",
+
+        messages=messages,
+
+        temperature=0.3,
+        max_tokens=250,   # 🔥 cost control
+
+        top_p=1
     )
 
     reply = response.choices[0].message.content
 
-    if len(reply) > 950:
+    # safety cut (Instagram limit)
+    if reply and len(reply) > 950:
         reply = reply[:950].rsplit(" ", 1)[0] + "..."
 
     return reply
 
 
-# ---------------- SUMMARY ENGINE ----------------
+# ---------------- SUMMARY (OPTIONAL BUT FREE) ----------------
 def generate_summary(messages):
 
     conversation = ""
@@ -91,27 +43,21 @@ def generate_summary(messages):
         conversation += f"{msg['role']}: {msg['content']}\n"
 
     response = client.chat.completions.create(
-        model="deepseek/deepseek-chat-v3-0324",
+        model="llama3-8b-8192",
+
         messages=[
             {
                 "role": "system",
-                "content": """
-You are a memory engine.
-
-Create a SHORT summary of conversation.
-
-RULES:
-- Only factual data
-- No recommendations
-- No opinions
-- Under 100 words
-"""
+                "content": "Summarize the conversation in under 80 words. Only facts."
             },
             {
                 "role": "user",
                 "content": conversation
             }
-        ]
+        ],
+
+        temperature=0.2,
+        max_tokens=120
     )
 
     summary = response.choices[0].message.content

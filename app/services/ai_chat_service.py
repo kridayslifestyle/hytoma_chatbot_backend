@@ -77,7 +77,7 @@ def ai_chat(db, customer_id, message):
         for item in history:
             messages.append({
                 "role": item.role,
-                "content": item.message
+                "content": item.message[:200]
             })
 
         # -------- AI RESPONSE --------
