@@ -1,6 +1,8 @@
 from app.ai.profile_extractor import extract_profile
 from app.services.profile_service import update_profile
 from app.rag.product_retriever import retrieve_products
+from app.rag.retriever import retrieve_context
+from app.prompts.system_prompt import SYSTEM_PROMPT
 from app.services.chat_service import (
     save_message,
     get_history
@@ -82,8 +84,24 @@ def ai_chat(db, customer_id, message):
         except Exception as e:
             print("Summary error:", e)
 
+        # ---------------- RAG CONTEXT (SAFE) ----------------
+        context_text = ""
+        try:
+            context_text = retrieve_context(message)
+        except Exception as e:
+            print("RAG retrieval error:", e)
+            context_text = ""
+
         # ---------------- BUILD MESSAGES ----------------
         messages = []
+
+        # Real system prompt, with retrieved document context injected
+        messages.append({
+            "role": "system",
+            "content": SYSTEM_PROMPT.format(
+                context=context_text or "No extra context available."
+            )
+        })
 
         if summary_text:
             messages.append({
