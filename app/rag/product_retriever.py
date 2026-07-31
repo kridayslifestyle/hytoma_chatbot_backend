@@ -30,10 +30,14 @@ def retrieve_products(query: str):
             name = normalize(item["name"])
 
             # 🔥 SMART MATCH (VERY IMPORTANT FIX)
+
+            query_words = set(q.split())
+            product_words = set((cat_name + " " + name).split())
+
             if (
                 cat_name in q
                 or name in q
-                or any(word in name for word in q.split())
+                or query_words & product_words
             ):
                 results.append({
                     "category": category["category"],

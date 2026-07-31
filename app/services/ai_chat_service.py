@@ -43,7 +43,7 @@ def ai_chat(db, customer_id, message):
         # ---------------- PROFILE ----------------
         PROFILE_KEYWORDS = ["name", "budget", "phone", "location", "city", "contact"]
 
-        if any(k in msg for k in PROFILE_KEYWORDS):
+        if any(k in message.lower() for k in PROFILE_KEYWORDS):
             try:
                 profile_data = extract_profile(message)
                 update_profile(db, customer_id, profile_data)
@@ -51,8 +51,8 @@ def ai_chat(db, customer_id, message):
                 print("Profile error:", e)
 
         # ---------------- PRICE ROUTE ----------------
-        if is_price_query(message):
-            from app.rag.product_retriever import retrieve_products
+        if is_price_query(msg):
+            
 
             products = retrieve_products(message)
 

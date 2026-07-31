@@ -14,11 +14,11 @@ documents = []
 document_set = set()
 
 # ---------------- PRICE KEYWORDS ----------------
-PRICE_KEYWORDS = [
-    "price", "cost", "₹", "rs", "budget", "offer", "pricing"
-]
+# PRICE_KEYWORDS = [
+#     "price", "cost", "₹", "rs", "budget", "offer", "pricing"
+# ]
 
-
+price_keywords = ["price", "cost", "₹", "budget", "offer", "pricing"]
 # ---------------- ADD DOCUMENT ----------------
 def add_document(text):
 
@@ -43,8 +43,8 @@ def search(query, k=5):
     q = query.lower()
 
     # 🚨 BLOCK PRODUCT QUERIES COMPLETELY
-    if any(word in q for word in PRICE_KEYWORDS):
-        return []
+    # if any(word in q for word in price_keywords):
+    #     return []
 
     vector = get_embedding(query)
 
@@ -106,21 +106,21 @@ def load_products():
 
 
 # ---------------- MAIN ROUTER (IMPORTANT FIX) ----------------
-def retrieve_context(query):
+# def retrieve_context(query):
 
-    q = query.lower()
+#     q = query.lower()
 
-    price_keywords = ["price", "cost", "₹", "budget", "offer", "pricing"]
+    
 
-    # 🚨 FORCE PRODUCT MODE
-    if any(k in q for k in price_keywords):
-        return {
-            "type": "product",
-            "data": []
-        }
+#     # 🚨 FORCE PRODUCT MODE
+#     if any(k in q for k in price_keywords):
+#         return {
+#             "type": "product",
+#             "data": []
+#         }
 
-    # ONLY RAG FOR NON-PRICE
-    return {
-        "type": "rag",
-        "data": search(query)
-    }
+#     # ONLY RAG FOR NON-PRICE
+#     return {
+#         "type": "rag",
+#         "data": search(query)
+#     }
