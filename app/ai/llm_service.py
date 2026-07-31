@@ -15,7 +15,8 @@ def generate_reply(messages):
 
     # keep token usage low (VERY IMPORTANT)
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        
+        model="llama-3.1-8b-instant",
 
         messages=messages,
 
@@ -43,7 +44,7 @@ def generate_summary(messages):
         conversation += f"{msg['role']}: {msg['content']}\n"
 
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.1-8b-instant",
 
         messages=[
             {

@@ -7,7 +7,7 @@ def extract_profile(message: str):
 
     response = client.chat.completions.create(
 
-        model="deepseek/deepseek-chat-v3-0324",
+        model="llama-3.1-8b-instant",
 
         messages=[
 
