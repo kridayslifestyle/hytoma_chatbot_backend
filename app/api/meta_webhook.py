@@ -9,7 +9,7 @@ from app.database.connection import SessionLocal
 from app.services.ai_chat_service import ai_chat
 
 from app.services.instagram_sender import send_instagram_message
-
+from app.utils.message_splitter import split_message
 from app.utils.typing import typing_delay
 
 router = APIRouter()
@@ -62,7 +62,9 @@ def process_message(sender_id: str, message_text: str, is_media=False):
 
         # 3. SEND MESSAGE (NON BLOCKING SAFE CALL)
         try:
-            send_instagram_message(sender_id, reply)
+            messages = split_message(reply)
+            for msg in messages:
+                send_instagram_message(sender_id, msg)
         except Exception as e:
             print("Send message failed:", e)
             db.rollback()

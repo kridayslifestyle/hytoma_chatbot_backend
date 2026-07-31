@@ -7,66 +7,85 @@ load_dotenv()
 PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
 
 
+# ---------------- SPLIT MESSAGE SAFELY ----------------
+def split_message(text, limit=900):
+    if not text:
+        return []
+
+    lines = text.split("\n")
+    chunks = []
+    current = ""
+
+    for line in lines:
+        if len(current) + len(line) + 1 > limit:
+            chunks.append(current)
+            current = line
+        else:
+            current += "\n" + line if current else line
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+
+
+# ---------------- SEND MESSAGE ----------------
 def send_instagram_message(recipient_id, text):
 
-    # -----------------------------
-    # LIMIT MESSAGE SIZE (IMPORTANT)
-    # -----------------------------
     if not text:
         return None
 
-    if len(text) > 950:
-        text = text[:950].rsplit(" ", 1)[0] + "..."
-
-    url = "https://graph.instagram.com/v25.0/me/messages"
+    url = "https://graph.facebook.com/v19.0/me/messages"
 
     headers = {
         "Content-Type": "application/json"
-    }
-
-    payload = {
-        "recipient": {
-            "id": recipient_id
-        },
-        "message": {
-            "text": text
-        }
     }
 
     params = {
         "access_token": PAGE_ACCESS_TOKEN
     }
 
+    messages = split_message(text)
+
+    responses = []
+
     try:
+        for msg in messages:
 
-        response = requests.post(
-            url,
-            headers=headers,
-            params=params,
-            json=payload,
-            timeout=5
-        )
+            payload = {
+                "recipient": {
+                    "id": recipient_id
+                },
+                "message": {
+                    "text": msg
+                }
+            }
 
-        print("\n========== SEND MESSAGE ==========")
-        print(response.status_code)
+            response = requests.post(
+                url,
+                headers=headers,
+                params=params,
+                json=payload,
+                timeout=10
+            )
 
-        try:
-            print(response.json())
-        except Exception:
-            print(response.text)
+            print("\n========== SEND MESSAGE ==========")
+            print(response.status_code)
 
-        # -----------------------------
-        # CHECK FAILURE
-        # -----------------------------
-        if response.status_code != 200:
-            print("\n❌ Instagram API Error")
-            print(response.text)
+            try:
+                print(response.json())
+            except Exception:
+                print(response.text)
 
-        # 🔥 IMPORTANT FIX
-        return response
+            if response.status_code != 200:
+                print("\n❌ Instagram API Error")
+                print(response.text)
+
+            responses.append(response)
+
+        return responses
 
     except Exception as e:
         print("\n❌ REQUEST FAILED:")
         print(e)
-
         return None
